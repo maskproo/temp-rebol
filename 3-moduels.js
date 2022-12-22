@@ -1,0 +1,7 @@
+const names=require("./1-names")
+const sayHi=require("./2-into")
+const data=require("./6-altrnatever")
+require("./7-mind-greinad")
+sayHi("bedo")
+sayHi(names.name1)
+sayHi(names.name2)
