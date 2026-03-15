@@ -1,0 +1,59 @@
+<div class="row g-4">
+  <div class="col-md-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-body text-center py-4">
+        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width:80px;height:80px">
+          <i class="bi bi-person-fill fs-1 text-primary"></i>
+        </div>
+        <h5 class="fw-bold mb-1"><%= customer.name %></h5>
+        <p class="text-muted mb-3"><%= customer.email || '' %></p>
+        <div class="d-flex gap-2 justify-content-center">
+          <a href="/customers/<%= customer._id %>/edit" class="btn btn-sm btn-outline-primary">تعديل</a>
+          <a href="/invoices/new?customer=<%= customer._id %>" class="btn btn-sm btn-primary">فاتورة جديدة</a>
+        </div>
+      </div>
+      <div class="card-footer bg-white border-0">
+        <% if (customer.phone) { %>
+        <div class="d-flex gap-2 mb-2"><i class="bi bi-phone text-muted"></i><span><%= customer.phone %></span></div>
+        <% } %>
+        <% if (customer.address) { %>
+        <div class="d-flex gap-2 mb-2"><i class="bi bi-geo-alt text-muted"></i><span><%= customer.address %></span></div>
+        <% } %>
+        <% if (customer.taxNumber) { %>
+        <div class="d-flex gap-2"><i class="bi bi-file-text text-muted"></i><span>رقم ضريبي: <%= customer.taxNumber %></span></div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white border-0 d-flex justify-content-between">
+        <h6 class="fw-bold mb-0">الفواتير</h6>
+        <span class="badge bg-secondary"><%= invoices.length %> فاتورة</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>رقم</th><th>التاريخ</th><th>الإجمالي</th><th>المدفوع</th><th>الحالة</th><th></th></tr></thead>
+          <tbody>
+            <% const statusMap = {draft:'مسودة',sent:'مُرسلة',partial:'جزئي',paid:'مدفوعة',overdue:'متأخرة',cancelled:'ملغية'} %>
+            <% const colorMap = {draft:'secondary',sent:'info',partial:'warning',paid:'success',overdue:'danger',cancelled:'dark'} %>
+            <% invoices.forEach(inv => { %>
+            <tr>
+              <td><a href="/invoices/<%= inv._id %>">#<%= inv.number %></a></td>
+              <td><%= new Date(inv.date).toLocaleDateString('ar-SA') %></td>
+              <td><%= inv.total.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+              <td><%= inv.paid.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+              <td><span class="badge bg-<%= colorMap[inv.status] %>"><%= statusMap[inv.status] %></span></td>
+              <td><a href="/invoices/<%= inv._id %>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a></td>
+            </tr>
+            <% }) %>
+            <% if (invoices.length === 0) { %>
+            <tr><td colspan="6" class="text-center text-muted py-3">لا توجد فواتير</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

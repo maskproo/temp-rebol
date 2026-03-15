@@ -1,17 +1,24 @@
 {
-  "name": "node1",
+  "name": "accounting-system",
   "version": "1.0.0",
-  "description": "",
-  "main": "1-names.js",
+  "description": "نظام محاسبة شامل - Node.js + MongoDB",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "seed": "node seed.js"
   },
-  "keywords": [],
+  "keywords": ["accounting", "محاسبة"],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bootstrap": "^5.2.3",
+    "dotenv": "^17.3.1",
+    "ejs": "^5.0.1",
+    "express": "^5.2.1",
+    "express-ejs-layouts": "^2.5.1",
     "jquery": "^3.6.3",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "method-override": "^3.0.0",
+    "mongoose": "^9.3.0"
   }
 }

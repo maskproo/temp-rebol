@@ -1,0 +1,158 @@
+<%
+const statusMap = {draft:'مسودة',sent:'مُرسلة',partial:'جزئي',paid:'مدفوعة',overdue:'متأخرة',cancelled:'ملغية'};
+const colorMap = {draft:'secondary',sent:'info',partial:'warning',paid:'success',overdue:'danger',cancelled:'dark'};
+%>
+
+<div class="d-flex gap-2 mb-3 no-print">
+  <button onclick="window.print()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer me-1"></i>طباعة</button>
+  <a href="/invoices" class="btn btn-outline-secondary btn-sm">رجوع</a>
+</div>
+
+<!-- Invoice Card -->
+<div class="card shadow border-0 mb-4" id="invoiceCard">
+  <div class="invoice-header text-white p-4 rounded-top">
+    <div class="row align-items-center">
+      <div class="col">
+        <h4 class="fw-bold mb-1">فاتورة مبيعات</h4>
+        <span class="badge bg-white text-dark fs-6">#<%= invoice.number %></span>
+      </div>
+      <div class="col-auto text-end">
+        <span class="badge bg-<%= colorMap[invoice.status] %> fs-6"><%= statusMap[invoice.status] %></span>
+      </div>
+    </div>
+  </div>
+  <div class="card-body p-4">
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <h6 class="text-muted mb-2">صادرة إلى:</h6>
+        <h5 class="fw-bold"><%= invoice.customer?.name %></h5>
+        <p class="text-muted mb-1"><%= invoice.customer?.email || '' %></p>
+        <p class="text-muted mb-0"><%= invoice.customer?.phone || '' %></p>
+        <% if (invoice.customer?.address) { %><p class="text-muted"><%= invoice.customer.address %></p><% } %>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <div class="mb-2">
+          <span class="text-muted">تاريخ الفاتورة: </span>
+          <strong><%= new Date(invoice.date).toLocaleDateString('ar-SA') %></strong>
+        </div>
+        <div class="mb-2">
+          <span class="text-muted">تاريخ الاستحقاق: </span>
+          <strong class="<%= invoice.status === 'overdue' ? 'text-danger' : '' %>">
+            <%= new Date(invoice.dueDate).toLocaleDateString('ar-SA') %>
+          </strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered">
+        <thead>
+          <tr class="invoice-items">
+            <th>#</th>
+            <th>البيان</th>
+            <th class="text-center">الكمية</th>
+            <th class="text-end">سعر الوحدة</th>
+            <th class="text-end">الإجمالي</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% invoice.items.forEach((item, i) => { %>
+          <tr>
+            <td><%= i + 1 %></td>
+            <td><%= item.description %></td>
+            <td class="text-center"><%= item.quantity %></td>
+            <td class="text-end"><%= item.unitPrice.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+            <td class="text-end fw-bold"><%= (item.quantity * item.unitPrice).toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="4" class="text-end text-muted">المجموع الفرعي</td><td class="text-end"><%= invoice.subtotal.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td></tr>
+          <% if (invoice.taxRate > 0) { %>
+          <tr><td colspan="4" class="text-end text-muted">الضريبة (<%= invoice.taxRate %>%)</td><td class="text-end text-warning"><%= invoice.taxAmount.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td></tr>
+          <% } %>
+          <tr class="table-light fw-bold fs-5">
+            <td colspan="4" class="text-end">الإجمالي</td>
+            <td class="text-end text-primary"><%= invoice.total.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          </tr>
+          <tr><td colspan="4" class="text-end text-success">المدفوع</td><td class="text-end text-success"><%= invoice.paid.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td></tr>
+          <tr class="table-warning fw-bold">
+            <td colspan="4" class="text-end">الباقي</td>
+            <td class="text-end"><%= invoice.balance.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <% if (invoice.notes) { %>
+    <div class="alert alert-light"><strong>ملاحظات:</strong> <%= invoice.notes %></div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Payments -->
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white border-0"><h6 class="fw-bold mb-0">سجل الدفعات</h6></div>
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th><th>المرجع</th></tr></thead>
+          <tbody>
+            <% payments.forEach(p => { %>
+            <tr>
+              <td><%= new Date(p.date).toLocaleDateString('ar-SA') %></td>
+              <td class="fw-bold text-success"><%= p.amount.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+              <td><%= p.method %></td>
+              <td><small class="text-muted"><%= p.reference || '-' %></small></td>
+            </tr>
+            <% }) %>
+            <% if (payments.length === 0) { %>
+            <tr><td colspan="4" class="text-center text-muted py-3">لا توجد دفعات</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <% if (invoice.balance > 0 && invoice.status !== 'cancelled') { %>
+  <div class="col-md-6 no-print">
+    <div class="card shadow-sm border-0 border-start border-success border-3">
+      <div class="card-header bg-white border-0"><h6 class="fw-bold mb-0 text-success"><i class="bi bi-cash-coin me-2"></i>تسجيل دفعة</h6></div>
+      <div class="card-body">
+        <form method="POST" action="/invoices/<%= invoice._id %>/pay">
+          <div class="mb-3">
+            <label class="form-label required">المبلغ</label>
+            <div class="input-group">
+              <input type="number" name="amount" class="form-control" max="<%= invoice.balance %>"
+                value="<%= invoice.balance.toFixed(2) %>" step="0.01" min="0.01" required>
+              <span class="input-group-text">ر.س</span>
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label">التاريخ</label>
+              <input type="date" name="date" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>">
+            </div>
+            <div class="col-6">
+              <label class="form-label">طريقة الدفع</label>
+              <select name="method" class="form-select">
+                <% ['نقداً','بنك','شيك','بطاقة','تحويل'].forEach(m => { %>
+                <option value="<%= m %>"><%= m %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">المرجع</label>
+            <input type="text" name="reference" class="form-control" placeholder="رقم الشيك / المعاملة">
+          </div>
+          <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-lg me-1"></i>تسجيل الدفعة</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <% } %>
+</div>

@@ -1,0 +1,97 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <form class="d-flex gap-2 flex-wrap" method="GET">
+    <select name="category" class="form-select form-select-sm" style="width:150px">
+      <option value="">كل الفئات</option>
+      <% categories.forEach(c => { %>
+      <option value="<%= c %>" <%= query.category === c ? 'selected' : '' %>><%= c %></option>
+      <% }) %>
+    </select>
+    <input type="date" name="from" class="form-control form-control-sm" value="<%= query.from || '' %>" style="width:145px">
+    <input type="date" name="to" class="form-control form-control-sm" value="<%= query.to || '' %>" style="width:145px">
+    <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-funnel"></i></button>
+    <a href="/expenses" class="btn btn-sm btn-outline-secondary">مسح</a>
+  </form>
+  <a href="/expenses/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>مصروف جديد</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card border-0 bg-danger bg-opacity-10">
+      <div class="card-body text-center">
+        <small class="text-muted d-block">إجمالي المصاريف</small>
+        <h4 class="fw-bold text-danger mb-0"><%= total.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></h4>
+        <small class="text-muted">ريال</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3">التوزيع حسب الفئة</h6>
+        <div class="d-flex flex-wrap gap-2">
+          <% Object.entries(categoryTotals).sort((a,b) => b[1]-a[1]).forEach(([cat, amount]) => { %>
+          <div class="d-flex align-items-center gap-1 p-2 bg-light rounded">
+            <span class="text-muted small"><%= cat %></span>
+            <span class="badge bg-danger bg-opacity-75"><%= amount.toLocaleString('ar-SA', {minimumFractionDigits:0}) %></span>
+          </div>
+          <% }) %>
+          <% if (Object.keys(categoryTotals).length === 0) { %>
+          <span class="text-muted">لا توجد بيانات</span>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>التاريخ</th>
+          <th>البيان</th>
+          <th>الفئة</th>
+          <th>طريقة الدفع</th>
+          <th>المرجع</th>
+          <th class="text-end">المبلغ</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% expenses.forEach(exp => { %>
+        <tr>
+          <td><%= new Date(exp.date).toLocaleDateString('ar-SA') %></td>
+          <td class="fw-medium"><%= exp.description %></td>
+          <td><span class="badge bg-secondary bg-opacity-10 text-secondary"><%= exp.category %></span></td>
+          <td><small><%= exp.paymentMethod %></small></td>
+          <td><small class="text-muted"><%= exp.reference || '-' %></small></td>
+          <td class="text-end fw-bold text-danger"><%= exp.amount.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          <td>
+            <div class="d-flex gap-1">
+              <a href="/expenses/<%= exp._id %>/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+              <form action="/expenses/<%= exp._id %>?_method=DELETE" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="حذف هذا المصروف؟">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+        <% if (expenses.length === 0) { %>
+        <tr><td colspan="7" class="text-center text-muted py-4">لا توجد مصاريف</td></tr>
+        <% } %>
+      </tbody>
+      <% if (expenses.length > 0) { %>
+      <tfoot class="table-light fw-bold">
+        <tr>
+          <td colspan="5" class="text-end">الإجمالي:</td>
+          <td class="text-end text-danger"><%= total.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          <td></td>
+        </tr>
+      </tfoot>
+      <% } %>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,75 @@
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+  <form class="d-flex gap-2" method="GET">
+    <div class="input-group input-group-sm">
+      <span class="input-group-text">من</span>
+      <input type="date" name="from" class="form-control" value="<%= query.from || '' %>">
+    </div>
+    <div class="input-group input-group-sm">
+      <span class="input-group-text">إلى</span>
+      <input type="date" name="to" class="form-control" value="<%= query.to || '' %>">
+    </div>
+    <button type="submit" class="btn btn-sm btn-primary">تطبيق</button>
+    <a href="/reports/trial" class="btn btn-sm btn-outline-secondary">مسح</a>
+  </form>
+  <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer me-1"></i>طباعة</button>
+</div>
+
+<div class="card shadow border-0">
+  <div class="card-header text-center py-3" style="background:#1a1a2e;color:white">
+    <h5 class="mb-1 fw-bold">ميزان المراجعة</h5>
+    <small>
+      <% if (query.from || query.to) { %>
+        <%= query.from ? 'من ' + new Date(query.from).toLocaleDateString('ar-SA') : '' %>
+        <%= query.to ? ' إلى ' + new Date(query.to).toLocaleDateString('ar-SA') : '' %>
+      <% } else { %>
+        كامل الفترة
+      <% } %>
+    </small>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>كود الحساب</th>
+          <th>اسم الحساب</th>
+          <th>النوع</th>
+          <th class="text-end">مجموع المدين</th>
+          <th class="text-end">مجموع الدائن</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% const typeLabels = {asset:'أصول', liability:'التزامات', equity:'حقوق', revenue:'إيرادات', expense:'مصاريف'} %>
+        <% const typeColors = {asset:'info', liability:'warning', equity:'success', revenue:'primary', expense:'danger'} %>
+        <% rows.forEach(r => { %>
+        <tr>
+          <td><span class="badge bg-light text-dark"><%= r.code %></span></td>
+          <td class="fw-medium"><%= r.name %></td>
+          <td><span class="badge bg-<%= typeColors[r.type] %> bg-opacity-10 text-<%= typeColors[r.type] %>"><%= typeLabels[r.type] %></span></td>
+          <td class="text-end"><%= r.debit > 0 ? r.debit.toLocaleString('ar-SA', {minimumFractionDigits:2}) : '-' %></td>
+          <td class="text-end"><%= r.credit > 0 ? r.credit.toLocaleString('ar-SA', {minimumFractionDigits:2}) : '-' %></td>
+        </tr>
+        <% }) %>
+        <% if (rows.length === 0) { %>
+        <tr><td colspan="5" class="text-center text-muted py-4">لا توجد حركات في هذه الفترة</td></tr>
+        <% } %>
+      </tbody>
+      <tfoot class="table-dark fw-bold">
+        <tr>
+          <td colspan="3" class="text-end">المجموع</td>
+          <td class="text-end fs-6"><%= totalDebit.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          <td class="text-end fs-6"><%= totalCredit.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <div class="card-footer text-center">
+    <% if (isBalanced) { %>
+    <span class="text-success fw-bold"><i class="bi bi-check-circle me-2"></i>الميزان متوازن</span>
+    <% } else { %>
+    <span class="text-danger fw-bold">
+      <i class="bi bi-exclamation-circle me-2"></i>
+      الميزان غير متوازن - الفرق: <%= Math.abs(totalDebit - totalCredit).toLocaleString('ar-SA', {minimumFractionDigits:2}) %>
+    </span>
+    <% } %>
+  </div>
+</div>

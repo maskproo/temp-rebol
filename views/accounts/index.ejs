@@ -1,0 +1,71 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex gap-2 flex-wrap">
+    <% ['','asset','liability','equity','revenue','expense'].forEach(t => { %>
+    <% const labels = {'':'الكل', asset:'أصول', liability:'التزامات', equity:'حقوق الملكية', revenue:'إيرادات', expense:'مصاريف'} %>
+    <a href="/accounts<%= t ? '?type=' + t : '' %>"
+       class="btn btn-sm <%= selectedType === t ? 'btn-primary' : 'btn-outline-secondary' %>">
+      <%= labels[t] %>
+    </a>
+    <% }) %>
+  </div>
+  <a href="/accounts/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> حساب جديد</a>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>الكود</th>
+          <th>اسم الحساب</th>
+          <th>النوع</th>
+          <th>الرصيد الطبيعي</th>
+          <th>الرصيد الحالي</th>
+          <th>الحالة</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% accounts.forEach(acc => { %>
+        <tr>
+          <td><span class="badge bg-light text-dark"><%= acc.code %></span></td>
+          <td class="fw-medium"><%= acc.name %></td>
+          <td>
+            <% const typeColors = {asset:'info', liability:'warning', equity:'success', revenue:'primary', expense:'danger'} %>
+            <span class="badge bg-<%= typeColors[acc.type] %> bg-opacity-10 text-<%= typeColors[acc.type] %>">
+              <%= acc.typeLabel %>
+            </span>
+          </td>
+          <td><small class="text-muted"><%= acc.normalBalance === 'debit' ? 'مدين' : 'دائن' %></small></td>
+          <td class="fw-bold <%= acc.balance >= 0 ? 'text-success' : 'text-danger' %>">
+            <%= (acc.balance || 0).toLocaleString('ar-SA', {minimumFractionDigits:2}) %>
+          </td>
+          <td>
+            <span class="badge <%= acc.isActive ? 'bg-success' : 'bg-secondary' %>">
+              <%= acc.isActive ? 'نشط' : 'موقوف' %>
+            </span>
+          </td>
+          <td>
+            <div class="d-flex gap-1">
+              <a href="/accounts/<%= acc._id %>/edit" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form action="/accounts/<%= acc._id %>?_method=DELETE" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-danger"
+                  data-confirm="هل تريد حذف حساب '<%= acc.name %>'؟">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+        <% if (accounts.length === 0) { %>
+        <tr><td colspan="7" class="text-center text-muted py-4">
+          لا توجد حسابات. <a href="/accounts/new">أضف حساباً الآن</a>
+        </td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
