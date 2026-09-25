@@ -1,0 +1,60 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <span class="text-muted"><%= customers.length %> عميل</span>
+  <a href="/customers/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> عميل جديد</a>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>الاسم</th>
+          <th>الجوال</th>
+          <th>البريد</th>
+          <th class="text-end">إجمالي الفواتير</th>
+          <th class="text-end">المدفوع</th>
+          <th class="text-end">الرصيد المستحق</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% customers.forEach(c => { %>
+        <tr>
+          <td>
+            <a href="/customers/<%= c._id %>" class="text-decoration-none fw-medium">
+              <i class="bi bi-person-circle me-1 text-muted"></i><%= c.name %>
+            </a>
+          </td>
+          <td><%= c.phone || '-' %></td>
+          <td><%= c.email || '-' %></td>
+          <td class="text-end"><%= (c.totalInvoiced || 0).toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          <td class="text-end text-success"><%= (c.totalPaid || 0).toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          <td class="text-end fw-bold <%= c.balance > 0 ? 'text-warning' : 'text-success' %>">
+            <%= (c.balance || 0).toLocaleString('ar-SA', {minimumFractionDigits:2}) %>
+          </td>
+          <td>
+            <div class="d-flex gap-1">
+              <a href="/invoices/new?customer=<%= c._id %>" class="btn btn-sm btn-outline-primary" title="فاتورة جديدة">
+                <i class="bi bi-receipt"></i>
+              </a>
+              <a href="/customers/<%= c._id %>/edit" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form action="/customers/<%= c._id %>?_method=DELETE" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="حذف العميل '<%= c.name %>'؟">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+        <% if (customers.length === 0) { %>
+        <tr><td colspan="7" class="text-center text-muted py-4">
+          لا يوجد عملاء. <a href="/customers/new">أضف عميلاً الآن</a>
+        </td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>

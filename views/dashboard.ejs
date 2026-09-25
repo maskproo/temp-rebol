@@ -1,0 +1,223 @@
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-md-2 col-sm-4 col-6">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted">إجمالي الإيرادات</small>
+          <div class="icon-box bg-success bg-opacity-10 text-success"><i class="bi bi-graph-up-arrow"></i></div>
+        </div>
+        <h5 class="fw-bold text-success mb-0"><%= stats.totalRevenue.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></h5>
+        <small class="text-muted">ريال</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-2 col-sm-4 col-6">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted">المصاريف</small>
+          <div class="icon-box bg-danger bg-opacity-10 text-danger"><i class="bi bi-cash-stack"></i></div>
+        </div>
+        <h5 class="fw-bold text-danger mb-0"><%= stats.totalExpenses.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></h5>
+        <small class="text-muted">ريال</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-2 col-sm-4 col-6">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted">صافي الربح</small>
+          <div class="icon-box bg-primary bg-opacity-10 text-primary"><i class="bi bi-piggy-bank"></i></div>
+        </div>
+        <h5 class="fw-bold <%= stats.netProfit >= 0 ? 'text-primary' : 'text-danger' %> mb-0">
+          <%= stats.netProfit.toLocaleString('ar-SA', {minimumFractionDigits:2}) %>
+        </h5>
+        <small class="text-muted">ريال</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-2 col-sm-4 col-6">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted">مستحق التحصيل</small>
+          <div class="icon-box bg-warning bg-opacity-10 text-warning"><i class="bi bi-hourglass-split"></i></div>
+        </div>
+        <h5 class="fw-bold text-warning mb-0"><%= stats.totalPending.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></h5>
+        <small class="text-muted">ريال</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-2 col-sm-4 col-6">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted">متأخر السداد</small>
+          <div class="icon-box bg-danger bg-opacity-10 text-danger"><i class="bi bi-exclamation-circle"></i></div>
+        </div>
+        <h5 class="fw-bold text-danger mb-0"><%= stats.totalOverdue.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></h5>
+        <small class="text-muted">ريال</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-2 col-sm-4 col-6">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted">العملاء</small>
+          <div class="icon-box bg-info bg-opacity-10 text-info"><i class="bi bi-people"></i></div>
+        </div>
+        <h5 class="fw-bold text-info mb-0"><%= stats.totalCustomers %></h5>
+        <small class="text-muted">عميل نشط</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-3 mb-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white border-0 pb-0">
+        <h6 class="fw-bold">الإيرادات والمصاريف (آخر 6 أشهر)</h6>
+      </div>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-header bg-white border-0 pb-0">
+        <h6 class="fw-bold">نظرة سريعة</h6>
+      </div>
+      <div class="card-body">
+        <div class="d-flex flex-column gap-3">
+          <a href="/invoices?status=overdue" class="text-decoration-none">
+            <div class="d-flex justify-content-between align-items-center p-2 bg-danger bg-opacity-10 rounded">
+              <span class="text-danger"><i class="bi bi-exclamation-circle me-2"></i>فواتير متأخرة</span>
+              <span class="badge bg-danger">متأخر</span>
+            </div>
+          </a>
+          <a href="/invoices?status=draft" class="text-decoration-none">
+            <div class="d-flex justify-content-between align-items-center p-2 bg-secondary bg-opacity-10 rounded">
+              <span class="text-secondary"><i class="bi bi-file-earmark me-2"></i>فواتير مسودة</span>
+              <span class="badge bg-secondary">مسودة</span>
+            </div>
+          </a>
+          <a href="/reports/income" class="text-decoration-none">
+            <div class="d-flex justify-content-between align-items-center p-2 bg-primary bg-opacity-10 rounded">
+              <span class="text-primary"><i class="bi bi-graph-up me-2"></i>قائمة الدخل</span>
+              <i class="bi bi-arrow-left text-primary"></i>
+            </div>
+          </a>
+          <a href="/reports/balance" class="text-decoration-none">
+            <div class="d-flex justify-content-between align-items-center p-2 bg-success bg-opacity-10 rounded">
+              <span class="text-success"><i class="bi bi-bank me-2"></i>الميزانية العمومية</span>
+              <i class="bi bi-arrow-left text-success"></i>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent -->
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0">آخر الفواتير</h6>
+        <a href="/invoices" class="btn btn-sm btn-outline-primary">عرض الكل</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>رقم</th><th>العميل</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+            <tbody>
+              <% recentInvoices.forEach(inv => { %>
+              <tr>
+                <td><a href="/invoices/<%= inv._id %>" class="text-decoration-none">#<%= inv.number %></a></td>
+                <td><%= inv.customer?.name || '-' %></td>
+                <td class="fw-bold"><%= inv.total.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+                <td>
+                  <% const statusMap = {draft:'مسودة',sent:'مُرسلة',partial:'جزئي',paid:'مدفوعة',overdue:'متأخرة',cancelled:'ملغية'} %>
+                  <% const colorMap = {draft:'secondary',sent:'info',partial:'warning',paid:'success',overdue:'danger',cancelled:'dark'} %>
+                  <span class="badge bg-<%= colorMap[inv.status] %>"><%= statusMap[inv.status] %></span>
+                </td>
+              </tr>
+              <% }) %>
+              <% if (recentInvoices.length === 0) { %>
+              <tr><td colspan="4" class="text-center text-muted py-3">لا توجد فواتير بعد</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0">آخر القيود المحاسبية</h6>
+        <a href="/journal" class="btn btn-sm btn-outline-primary">عرض الكل</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>التاريخ</th><th>البيان</th><th>المصدر</th></tr></thead>
+            <tbody>
+              <% recentJournal.forEach(entry => { %>
+              <tr>
+                <td><%= new Date(entry.date).toLocaleDateString('ar-SA') %></td>
+                <td><a href="/journal/<%= entry._id %>" class="text-decoration-none"><%= entry.description %></a></td>
+                <td>
+                  <% const srcMap = {manual:'يدوي',invoice:'فاتورة',expense:'مصروف',payment:'دفعة'} %>
+                  <span class="badge bg-light text-dark"><%= srcMap[entry.source] || entry.source %></span>
+                </td>
+              </tr>
+              <% }) %>
+              <% if (recentJournal.length === 0) { %>
+              <tr><td colspan="3" class="text-center text-muted py-3">لا توجد قيود بعد</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ctx = document.getElementById('revenueChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: <%- JSON.stringify(chartData.labels) %>,
+    datasets: [
+      {
+        label: 'الإيرادات',
+        data: <%- JSON.stringify(chartData.revenue) %>,
+        backgroundColor: 'rgba(25, 135, 84, 0.7)',
+        borderRadius: 6
+      },
+      {
+        label: 'المصاريف',
+        data: <%- JSON.stringify(chartData.expenses) %>,
+        backgroundColor: 'rgba(220, 53, 69, 0.7)',
+        borderRadius: 6
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: { y: { beginAtZero: true } }
+  }
+});
+</script>

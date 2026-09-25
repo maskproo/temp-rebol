@@ -1,0 +1,80 @@
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+  <form class="d-flex gap-2" method="GET">
+    <div class="input-group input-group-sm">
+      <span class="input-group-text">من</span>
+      <input type="date" name="from" class="form-control" value="<%= query.from || '' %>">
+    </div>
+    <div class="input-group input-group-sm">
+      <span class="input-group-text">إلى</span>
+      <input type="date" name="to" class="form-control" value="<%= query.to || '' %>">
+    </div>
+    <button type="submit" class="btn btn-sm btn-primary">تطبيق</button>
+    <a href="/reports/income" class="btn btn-sm btn-outline-secondary">مسح</a>
+  </form>
+  <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer me-1"></i>طباعة</button>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow border-0">
+      <div class="card-header bg-primary text-white text-center py-3">
+        <h5 class="mb-1 fw-bold">قائمة الدخل</h5>
+        <small>
+          <% if (query.from || query.to) { %>
+            <%= query.from ? 'من ' + new Date(query.from).toLocaleDateString('ar-SA') : '' %>
+            <%= query.to ? ' إلى ' + new Date(query.to).toLocaleDateString('ar-SA') : '' %>
+          <% } else { %>
+            حتى <%= new Date().toLocaleDateString('ar-SA') %>
+          <% } %>
+        </small>
+      </div>
+      <div class="card-body p-4">
+
+        <!-- Revenue -->
+        <h6 class="fw-bold text-success mb-3 border-bottom pb-2">الإيرادات</h6>
+        <table class="table table-sm mb-2">
+          <% revenueRows.forEach(r => { %>
+          <tr>
+            <td class="text-muted ps-3"><small><%= r.code %></small></td>
+            <td><%= r.name %></td>
+            <td class="text-end fw-medium text-success"><%= r.balance.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          </tr>
+          <% }) %>
+          <% if (revenueRows.length === 0) { %>
+          <tr><td colspan="3" class="text-center text-muted">لا توجد إيرادات</td></tr>
+          <% } %>
+        </table>
+        <div class="d-flex justify-content-between align-items-center bg-success bg-opacity-10 p-2 rounded mb-4">
+          <strong class="text-success">إجمالي الإيرادات</strong>
+          <strong class="text-success fs-5"><%= totalRevenue.toLocaleString('ar-SA', {minimumFractionDigits:2}) %> ر.س</strong>
+        </div>
+
+        <!-- Expenses -->
+        <h6 class="fw-bold text-danger mb-3 border-bottom pb-2">المصاريف</h6>
+        <table class="table table-sm mb-2">
+          <% expenseRows.forEach(r => { %>
+          <tr>
+            <td class="text-muted ps-3"><small><%= r.code %></small></td>
+            <td><%= r.name %></td>
+            <td class="text-end fw-medium text-danger"><%= r.balance.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          </tr>
+          <% }) %>
+          <% if (expenseRows.length === 0) { %>
+          <tr><td colspan="3" class="text-center text-muted">لا توجد مصاريف</td></tr>
+          <% } %>
+        </table>
+        <div class="d-flex justify-content-between align-items-center bg-danger bg-opacity-10 p-2 rounded mb-4">
+          <strong class="text-danger">إجمالي المصاريف</strong>
+          <strong class="text-danger fs-5"><%= totalExpenses.toLocaleString('ar-SA', {minimumFractionDigits:2}) %> ر.س</strong>
+        </div>
+
+        <!-- Net Profit -->
+        <div class="d-flex justify-content-between align-items-center p-3 rounded
+          <%= netProfit >= 0 ? 'bg-success text-white' : 'bg-danger text-white' %>">
+          <strong class="fs-5"><%= netProfit >= 0 ? 'صافي الربح' : 'صافي الخسارة' %></strong>
+          <strong class="fs-4"><%= Math.abs(netProfit).toLocaleString('ar-SA', {minimumFractionDigits:2}) %> ر.س</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

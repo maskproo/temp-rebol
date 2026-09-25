@@ -1,0 +1,90 @@
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white border-0 pt-4 d-flex justify-content-between">
+    <h5 class="fw-bold mb-0">إدخال قيد يومي</h5>
+    <span id="journalBalance" class="fw-bold text-muted">مجموع المدين: 0.00 | مجموع الدائن: 0.00</span>
+  </div>
+  <div class="card-body">
+    <% if (error) { %>
+    <div class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i><%= error %></div>
+    <% } %>
+    <form method="POST" action="/journal">
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <label class="form-label required">التاريخ</label>
+          <input type="date" name="date" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">رقم المرجع</label>
+          <input type="text" name="reference" class="form-control" placeholder="اختياري">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label required">البيان</label>
+          <input type="text" name="description" class="form-control" placeholder="وصف القيد" required>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-bordered mb-2">
+          <thead class="table-light">
+            <tr>
+              <th style="width:35%">الحساب</th>
+              <th>البيان</th>
+              <th style="width:15%">مدين</th>
+              <th style="width:15%">دائن</th>
+              <th style="width:40px"></th>
+            </tr>
+          </thead>
+          <tbody id="journalLines">
+            <tr class="journal-row item-row">
+              <td>
+                <select name="accountId[]" class="form-select form-select-sm" required>
+                  <option value="">-- اختر --</option>
+                  <% accounts.forEach(acc => { %>
+                  <option value="<%= acc._id %>"><%= acc.code %> - <%= acc.name %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td><input type="text" name="lineDesc[]" class="form-control form-control-sm" placeholder="بيان السطر"></td>
+              <td><input type="number" name="debit[]" class="form-control form-control-sm j-debit" step="0.01" min="0" value="0" oninput="updateJournalBalance()"></td>
+              <td><input type="number" name="credit[]" class="form-control form-control-sm j-credit" step="0.01" min="0" value="0" oninput="updateJournalBalance()"></td>
+              <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)"><i class="bi bi-x"></i></button></td>
+            </tr>
+            <tr class="journal-row item-row">
+              <td>
+                <select name="accountId[]" class="form-select form-select-sm" required>
+                  <option value="">-- اختر --</option>
+                  <% accounts.forEach(acc => { %>
+                  <option value="<%= acc._id %>"><%= acc.code %> - <%= acc.name %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td><input type="text" name="lineDesc[]" class="form-control form-control-sm" placeholder="بيان السطر"></td>
+              <td><input type="number" name="debit[]" class="form-control form-control-sm j-debit" step="0.01" min="0" value="0" oninput="updateJournalBalance()"></td>
+              <td><input type="number" name="credit[]" class="form-control form-control-sm j-credit" step="0.01" min="0" value="0" oninput="updateJournalBalance()"></td>
+              <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)"><i class="bi bi-x"></i></button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button type="button" class="btn btn-sm btn-outline-primary mb-4"
+        onclick="addRow('journalLines', `
+          <td><select name='accountId[]' class='form-select form-select-sm' required>
+            <option value=''>-- اختر --</option>
+            <% accounts.forEach(acc => { %><option value='<%= acc._id %>'><%= acc.code %> - <%= acc.name %></option><% }) %>
+          </select></td>
+          <td><input type='text' name='lineDesc[]' class='form-control form-control-sm' placeholder='بيان السطر'></td>
+          <td><input type='number' name='debit[]' class='form-control form-control-sm j-debit' step='0.01' min='0' value='0' oninput='updateJournalBalance()'></td>
+          <td><input type='number' name='credit[]' class='form-control form-control-sm j-credit' step='0.01' min='0' value='0' oninput='updateJournalBalance()'></td>
+          <td><button type='button' class='btn btn-sm btn-outline-danger' onclick='removeRow(this)'><i class='bi bi-x'></i></button></td>
+        `)">
+        <i class="bi bi-plus me-1"></i> إضافة سطر
+      </button>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> حفظ القيد</button>
+        <a href="/journal" class="btn btn-outline-secondary">إلغاء</a>
+      </div>
+    </form>
+  </div>
+</div>

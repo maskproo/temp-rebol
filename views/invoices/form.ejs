@@ -1,0 +1,91 @@
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white border-0 pt-4">
+    <h5 class="fw-bold mb-0">إنشاء فاتورة جديدة</h5>
+  </div>
+  <div class="card-body">
+    <% if (error) { %>
+    <div class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i><%= error %></div>
+    <% } %>
+    <form method="POST" action="/invoices">
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <label class="form-label required">العميل</label>
+          <select name="customer" class="form-select" required>
+            <option value="">-- اختر العميل --</option>
+            <% customers.forEach(c => { %>
+            <option value="<%= c._id %>" <%= invoice && String(invoice.customer) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label required">تاريخ الفاتورة</label>
+          <input type="date" name="date" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label required">تاريخ الاستحقاق</label>
+          <input type="date" name="dueDate" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">نسبة الضريبة (%)</label>
+          <input type="number" name="taxRate" id="taxRate" class="form-control" value="0" min="0" max="100" step="0.01">
+        </div>
+        <div class="col-md-9">
+          <label class="form-label">ملاحظات</label>
+          <input type="text" name="notes" class="form-control" placeholder="ملاحظات اختيارية">
+        </div>
+      </div>
+
+      <!-- Items Table -->
+      <h6 class="fw-bold mb-3">بنود الفاتورة</h6>
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th style="width:45%">البيان</th>
+              <th style="width:15%">الكمية</th>
+              <th style="width:20%">سعر الوحدة</th>
+              <th style="width:15%">الإجمالي</th>
+              <th style="width:5%"></th>
+            </tr>
+          </thead>
+          <tbody id="invoiceItems">
+            <tr class="item-row">
+              <td><input type="text" name="itemDesc[]" class="form-control form-control-sm" placeholder="وصف البند" required></td>
+              <td><input type="number" name="itemQty[]" class="form-control form-control-sm item-qty" value="1" min="0.01" step="0.01" oninput="updateTotals()"></td>
+              <td><input type="number" name="itemPrice[]" class="form-control form-control-sm item-price" value="0" min="0" step="0.01" oninput="updateTotals()"></td>
+              <td><span class="item-total fw-bold">0.00</span></td>
+              <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)"><i class="bi bi-x"></i></button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-primary mb-4"
+        onclick="addRow('invoiceItems', `
+          <td><input type='text' name='itemDesc[]' class='form-control form-control-sm' placeholder='وصف البند' required></td>
+          <td><input type='number' name='itemQty[]' class='form-control form-control-sm item-qty' value='1' min='0.01' step='0.01' oninput='updateTotals()'></td>
+          <td><input type='number' name='itemPrice[]' class='form-control form-control-sm item-price' value='0' min='0' step='0.01' oninput='updateTotals()'></td>
+          <td><span class='item-total fw-bold'>0.00</span></td>
+          <td><button type='button' class='btn btn-sm btn-outline-danger' onclick='removeRow(this)'><i class='bi bi-x'></i></button></td>
+        `)">
+        <i class="bi bi-plus me-1"></i> إضافة بند
+      </button>
+
+      <!-- Totals -->
+      <div class="row justify-content-end">
+        <div class="col-md-4">
+          <table class="table table-borderless mb-0">
+            <tr><td class="text-muted">المجموع الفرعي:</td><td class="text-end fw-bold" id="subtotalDisplay">0.00</td></tr>
+            <tr><td class="text-muted">الضريبة:</td><td class="text-end text-warning" id="taxDisplay">0.00</td></tr>
+            <tr class="border-top"><td class="fw-bold fs-5">الإجمالي:</td><td class="text-end fw-bold fs-5 text-primary" id="totalDisplay">0.00</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" name="action" value="issue" class="btn btn-primary btn-lg"><i class="bi bi-check-lg me-1"></i>إصدار الفاتورة</button>
+        <button type="submit" name="action" value="draft" class="btn btn-outline-primary btn-lg"><i class="bi bi-file-earmark me-1"></i>حفظ كمسودة</button>
+        <a href="/invoices" class="btn btn-outline-secondary btn-lg">إلغاء</a>
+      </div>
+    </form>
+  </div>
+</div>

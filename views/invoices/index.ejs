@@ -1,0 +1,101 @@
+<div class="row g-3 mb-4">
+  <% const sMap = {'':'الكل','draft':'مسودة','sent':'مُرسلة','partial':'جزئي','paid':'مدفوعة','overdue':'متأخرة','cancelled':'ملغية'} %>
+  <% const sColor = {'':'secondary','draft':'secondary','sent':'info','partial':'warning','paid':'success','overdue':'danger','cancelled':'dark'} %>
+  <div class="col-12 d-flex gap-2 flex-wrap">
+    <% Object.keys(sMap).forEach(s => { %>
+    <a href="/invoices<%= s ? '?status=' + s : '' %>"
+       class="btn btn-sm <%= selectedStatus === s ? 'btn-' + (sColor[s] || 'primary') : 'btn-outline-' + (sColor[s] || 'secondary') %>">
+      <%= sMap[s] %>
+    </a>
+    <% }) %>
+    <a href="/invoices/new" class="btn btn-primary ms-auto"><i class="bi bi-plus-lg me-1"></i>فاتورة جديدة</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-3">
+    <div class="card border-0 bg-primary bg-opacity-10">
+      <div class="card-body py-2 text-center">
+        <small class="text-muted d-block">إجمالي</small>
+        <strong class="text-primary"><%= totals.all.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></strong>
+      </div>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="card border-0 bg-success bg-opacity-10">
+      <div class="card-body py-2 text-center">
+        <small class="text-muted d-block">محصّل</small>
+        <strong class="text-success"><%= totals.paid.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></strong>
+      </div>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="card border-0 bg-warning bg-opacity-10">
+      <div class="card-body py-2 text-center">
+        <small class="text-muted d-block">مستحق</small>
+        <strong class="text-warning"><%= totals.pending.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></strong>
+      </div>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="card border-0 bg-danger bg-opacity-10">
+      <div class="card-body py-2 text-center">
+        <small class="text-muted d-block">متأخر</small>
+        <strong class="text-danger"><%= totals.overdue.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>رقم الفاتورة</th>
+          <th>العميل</th>
+          <th>التاريخ</th>
+          <th>تاريخ الاستحقاق</th>
+          <th class="text-end">الإجمالي</th>
+          <th class="text-end">المدفوع</th>
+          <th class="text-end">الباقي</th>
+          <th>الحالة</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% const statusMap = {draft:'مسودة',sent:'مُرسلة',partial:'جزئي',paid:'مدفوعة',overdue:'متأخرة',cancelled:'ملغية'} %>
+        <% const colorMap = {draft:'secondary',sent:'info',partial:'warning',paid:'success',overdue:'danger',cancelled:'dark'} %>
+        <% invoices.forEach(inv => { %>
+        <tr>
+          <td><a href="/invoices/<%= inv._id %>" class="text-decoration-none fw-bold">#<%= inv.number %></a></td>
+          <td><a href="/customers/<%= inv.customer?._id %>" class="text-decoration-none"><%= inv.customer?.name || '-' %></a></td>
+          <td><%= new Date(inv.date).toLocaleDateString('ar-SA') %></td>
+          <td class="<%= inv.status === 'overdue' ? 'text-danger fw-bold' : '' %>">
+            <%= new Date(inv.dueDate).toLocaleDateString('ar-SA') %>
+          </td>
+          <td class="text-end"><%= inv.total.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          <td class="text-end text-success"><%= inv.paid.toLocaleString('ar-SA', {minimumFractionDigits:2}) %></td>
+          <td class="text-end fw-bold <%= inv.balance > 0 ? 'text-warning' : 'text-success' %>">
+            <%= inv.balance.toLocaleString('ar-SA', {minimumFractionDigits:2}) %>
+          </td>
+          <td><span class="badge bg-<%= colorMap[inv.status] %>"><%= statusMap[inv.status] %></span></td>
+          <td>
+            <div class="d-flex gap-1">
+              <a href="/invoices/<%= inv._id %>" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+              <form action="/invoices/<%= inv._id %>?_method=DELETE" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="حذف الفاتورة #<%= inv.number %>؟">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+        <% if (invoices.length === 0) { %>
+        <tr><td colspan="9" class="text-center text-muted py-4">لا توجد فواتير</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
