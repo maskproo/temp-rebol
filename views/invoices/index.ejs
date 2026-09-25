@@ -1,6 +1,6 @@
 <div class="row g-3 mb-4">
-  <% const sMap = {'':'الكل','draft':'مسودة','sent':'مُرسلة','partial':'جزئي','paid':'مدفوعة','overdue':'متأخرة'} %>
-  <% const sColor = {'':'secondary','draft':'secondary','sent':'info','partial':'warning','paid':'success','overdue':'danger'} %>
+  <% const sMap = {'':'الكل','draft':'مسودة','sent':'مُرسلة','partial':'جزئي','paid':'مدفوعة','overdue':'متأخرة','cancelled':'ملغية'} %>
+  <% const sColor = {'':'secondary','draft':'secondary','sent':'info','partial':'warning','paid':'success','overdue':'danger','cancelled':'dark'} %>
   <div class="col-12 d-flex gap-2 flex-wrap">
     <% Object.keys(sMap).forEach(s => { %>
     <a href="/invoices<%= s ? '?status=' + s : '' %>"

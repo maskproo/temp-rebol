@@ -14,7 +14,7 @@ const ExpenseSchema = new mongoose.Schema({
     enum: ['نقداً', 'بنك', 'شيك', 'بطاقة'],
     default: 'نقداً'
   },
-  account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' },
+  account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: [true, 'يجب اختيار الحساب المحاسبي'] },
   reference: { type: String, trim: true },
   notes: { type: String, default: '' },
   attachments: [{ type: String }]

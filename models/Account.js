@@ -14,28 +14,10 @@ const AccountSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Auto-set normalBalance based on account type
-AccountSchema.pre('save', function (next) {
+AccountSchema.pre('save', function () {
   const debitTypes = ['asset', 'expense'];
   this.normalBalance = debitTypes.includes(this.type) ? 'debit' : 'credit';
-  next();
 });
-
-// Virtual: computed balance from journal entries
-AccountSchema.methods.getBalance = async function () {
-  const JournalEntry = mongoose.model('JournalEntry');
-  const entries = await JournalEntry.find({ 'lines.account': this._id });
-  let debit = 0, credit = 0;
-  entries.forEach(entry => {
-    entry.lines.forEach(line => {
-      if (line.account.toString() === this._id.toString()) {
-        debit += line.debit || 0;
-        credit += line.credit || 0;
-      }
-    });
-  });
-  if (this.normalBalance === 'debit') return debit - credit;
-  return credit - debit;
-};
 
 const typeLabels = {
   asset: 'أصول',

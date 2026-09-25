@@ -6,6 +6,16 @@ const colorMap = {draft:'secondary',sent:'info',partial:'warning',paid:'success'
 <div class="d-flex gap-2 mb-3 no-print">
   <button onclick="window.print()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer me-1"></i>طباعة</button>
   <a href="/invoices" class="btn btn-outline-secondary btn-sm">رجوع</a>
+  <% if (invoice.status === 'draft') { %>
+  <form method="POST" action="/invoices/<%= invoice._id %>/issue" class="d-inline">
+    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-send me-1"></i>إصدار الفاتورة</button>
+  </form>
+  <% } %>
+  <% if (invoice.status !== 'cancelled' && invoice.paid === 0) { %>
+  <form method="POST" action="/invoices/<%= invoice._id %>/cancel" class="d-inline">
+    <button type="submit" class="btn btn-outline-danger btn-sm" data-confirm="إلغاء الفاتورة #<%= invoice.number %>؟"><i class="bi bi-x-circle me-1"></i>إلغاء الفاتورة</button>
+  </form>
+  <% } %>
 </div>
 
 <!-- Invoice Card -->
@@ -117,7 +127,7 @@ const colorMap = {draft:'secondary',sent:'info',partial:'warning',paid:'success'
     </div>
   </div>
 
-  <% if (invoice.balance > 0 && invoice.status !== 'cancelled') { %>
+  <% if (invoice.balance > 0 && !['draft', 'cancelled'].includes(invoice.status)) { %>
   <div class="col-md-6 no-print">
     <div class="card shadow-sm border-0 border-start border-success border-3">
       <div class="card-header bg-white border-0"><h6 class="fw-bold mb-0 text-success"><i class="bi bi-cash-coin me-2"></i>تسجيل دفعة</h6></div>

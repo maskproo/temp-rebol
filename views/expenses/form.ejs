@@ -2,13 +2,13 @@
   <div class="col-md-7">
     <div class="card shadow-sm border-0">
       <div class="card-header bg-white border-0 pt-4">
-        <h5 class="fw-bold mb-0"><%= expense ? 'تعديل المصروف' : 'تسجيل مصروف جديد' %></h5>
+        <h5 class="fw-bold mb-0"><%= expense && expense._id ? 'تعديل المصروف' : 'تسجيل مصروف جديد' %></h5>
       </div>
       <div class="card-body">
         <% if (error) { %>
         <div class="alert alert-danger"><%= error %></div>
         <% } %>
-        <form method="POST" action="<%= expense ? '/expenses/' + expense._id + '?_method=PUT' : '/expenses' %>">
+        <form method="POST" action="<%= expense && expense._id ? '/expenses/' + expense._id + '?_method=PUT' : '/expenses' %>">
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label required">التاريخ</label>
@@ -43,9 +43,9 @@
               </select>
             </div>
             <div class="col-md-6">
-              <label class="form-label">الحساب المحاسبي</label>
-              <select name="account" class="form-select">
-                <option value="">-- لا شيء --</option>
+              <label class="form-label required">الحساب المحاسبي</label>
+              <select name="account" class="form-select" required>
+                <option value="">-- اختر الحساب --</option>
                 <% accounts.forEach(acc => { %>
                 <option value="<%= acc._id %>" <%= expense?.account?.toString() === acc._id.toString() ? 'selected' : '' %>><%= acc.code %> - <%= acc.name %></option>
                 <% }) %>

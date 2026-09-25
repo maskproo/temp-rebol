@@ -1,50 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const Account = require('../models/Account');
-const JournalEntry = require('../models/JournalEntry');
-const Invoice = require('../models/Invoice');
-const Expense = require('../models/Expense');
+const { getBalances, balanceOf } = require('../services/ledger');
 
-// Helper: get account balance for a period
-async function getAccountBalance(accountId, fromDate, toDate) {
-  const filter = { 'lines.account': accountId };
-  if (fromDate || toDate) {
-    filter.date = {};
-    if (fromDate) filter.date.$gte = new Date(fromDate);
-    if (toDate) filter.date.$lte = new Date(toDate + 'T23:59:59');
-  }
-  const entries = await JournalEntry.find(filter);
-  let debit = 0, credit = 0;
-  entries.forEach(entry => {
-    entry.lines.forEach(line => {
-      if (line.account.toString() === accountId.toString()) {
-        debit += line.debit || 0;
-        credit += line.credit || 0;
-      }
-    });
-  });
-  return { debit, credit, net: debit - credit };
-}
+// Inactive accounts are still reported when they carry a balance
+const rowsFor = (accounts, balances) => accounts
+  .map(acc => ({ ...acc.toObject({ virtuals: true }), ...balanceOf(balances, acc) }))
+  .filter(r => r.isActive || r.debit !== 0 || r.credit !== 0);
+
+const sum = (rows, key = 'balance') => rows.reduce((s, r) => s + r[key], 0);
 
 // Income Statement
 router.get('/income', async (req, res) => {
   const { from, to } = req.query;
-  const revenues = await Account.find({ type: 'revenue', isActive: true }).sort({ code: 1 });
-  const expenses = await Account.find({ type: 'expense', isActive: true }).sort({ code: 1 });
+  const [accounts, balances] = await Promise.all([
+    Account.find({ type: { $in: ['revenue', 'expense'] } }).sort({ code: 1 }),
+    getBalances(from, to)
+  ]);
 
-  const revenueRows = await Promise.all(revenues.map(async (acc) => {
-    const bal = await getAccountBalance(acc._id, from, to);
-    return { ...acc.toObject({ virtuals: true }), balance: bal.credit - bal.debit };
-  }));
-
-  const expenseRows = await Promise.all(expenses.map(async (acc) => {
-    const bal = await getAccountBalance(acc._id, from, to);
-    return { ...acc.toObject({ virtuals: true }), balance: bal.debit - bal.credit };
-  }));
-
-  const totalRevenue = revenueRows.reduce((s, a) => s + a.balance, 0);
-  const totalExpenses = expenseRows.reduce((s, a) => s + a.balance, 0);
-  const netProfit = totalRevenue - totalExpenses;
+  const revenueRows = rowsFor(accounts.filter(a => a.type === 'revenue'), balances);
+  const expenseRows = rowsFor(accounts.filter(a => a.type === 'expense'), balances);
+  const totalRevenue = sum(revenueRows);
+  const totalExpenses = sum(expenseRows);
 
   res.render('reports/income-statement', {
     title: 'قائمة الدخل',
@@ -52,52 +29,32 @@ router.get('/income', async (req, res) => {
     expenseRows,
     totalRevenue,
     totalExpenses,
-    netProfit,
+    netProfit: totalRevenue - totalExpenses,
     query: req.query
   });
 });
 
 // Balance Sheet
 router.get('/balance', async (req, res) => {
-  const { asOf } = req.query;
+  const asOf = typeof req.query.asOf === 'string' && req.query.asOf ? req.query.asOf : null;
   const toDate = asOf || new Date().toISOString().split('T')[0];
 
-  const assets = await Account.find({ type: 'asset', isActive: true }).sort({ code: 1 });
-  const liabilities = await Account.find({ type: 'liability', isActive: true }).sort({ code: 1 });
-  const equities = await Account.find({ type: 'equity', isActive: true }).sort({ code: 1 });
+  const [accounts, balances] = await Promise.all([
+    Account.find().sort({ code: 1 }),
+    getBalances(null, toDate)
+  ]);
+  const ofType = (type) => accounts.filter(a => a.type === type);
 
-  const assetRows = await Promise.all(assets.map(async (acc) => {
-    const bal = await getAccountBalance(acc._id, null, toDate);
-    return { ...acc.toObject({ virtuals: true }), balance: bal.debit - bal.credit };
-  }));
+  const assetRows = rowsFor(ofType('asset'), balances);
+  const liabilityRows = rowsFor(ofType('liability'), balances);
+  const equityRows = rowsFor(ofType('equity'), balances);
 
-  const liabilityRows = await Promise.all(liabilities.map(async (acc) => {
-    const bal = await getAccountBalance(acc._id, null, toDate);
-    return { ...acc.toObject({ virtuals: true }), balance: bal.credit - bal.debit };
-  }));
+  // Current-period earnings are part of equity
+  const netProfit = sum(rowsFor(ofType('revenue'), balances)) - sum(rowsFor(ofType('expense'), balances));
 
-  const equityRows = await Promise.all(equities.map(async (acc) => {
-    const bal = await getAccountBalance(acc._id, null, toDate);
-    return { ...acc.toObject({ virtuals: true }), balance: bal.credit - bal.debit };
-  }));
-
-  // Add net profit to equity
-  const revAccounts = await Account.find({ type: 'revenue', isActive: true });
-  const expAccounts = await Account.find({ type: 'expense', isActive: true });
-  let totalRev = 0, totalExp = 0;
-  for (const acc of revAccounts) {
-    const bal = await getAccountBalance(acc._id, null, toDate);
-    totalRev += bal.credit - bal.debit;
-  }
-  for (const acc of expAccounts) {
-    const bal = await getAccountBalance(acc._id, null, toDate);
-    totalExp += bal.debit - bal.credit;
-  }
-  const netProfit = totalRev - totalExp;
-
-  const totalAssets = assetRows.reduce((s, a) => s + a.balance, 0);
-  const totalLiabilities = liabilityRows.reduce((s, a) => s + a.balance, 0);
-  const totalEquity = equityRows.reduce((s, a) => s + a.balance, 0) + netProfit;
+  const totalAssets = sum(assetRows);
+  const totalLiabilities = sum(liabilityRows);
+  const totalEquity = sum(equityRows) + netProfit;
 
   res.render('reports/balance-sheet', {
     title: 'الميزانية العمومية',
@@ -115,20 +72,20 @@ router.get('/balance', async (req, res) => {
 // Trial Balance
 router.get('/trial', async (req, res) => {
   const { from, to } = req.query;
-  const accounts = await Account.find({ isActive: true }).sort({ code: 1 });
+  const [accounts, balances] = await Promise.all([
+    Account.find().sort({ code: 1 }),
+    getBalances(from, to)
+  ]);
 
-  const rows = await Promise.all(accounts.map(async (acc) => {
-    const bal = await getAccountBalance(acc._id, from, to);
-    return { ...acc.toObject({ virtuals: true }), debit: bal.debit, credit: bal.credit };
-  }));
-
-  const filtered = rows.filter(r => r.debit > 0 || r.credit > 0);
-  const totalDebit = filtered.reduce((s, r) => s + r.debit, 0);
-  const totalCredit = filtered.reduce((s, r) => s + r.credit, 0);
+  const rows = accounts
+    .map(acc => ({ ...acc.toObject({ virtuals: true }), ...balanceOf(balances, acc) }))
+    .filter(r => r.debit > 0 || r.credit > 0);
+  const totalDebit = sum(rows, 'debit');
+  const totalCredit = sum(rows, 'credit');
 
   res.render('reports/trial-balance', {
     title: 'ميزان المراجعة',
-    rows: filtered,
+    rows,
     totalDebit,
     totalCredit,
     isBalanced: Math.abs(totalDebit - totalCredit) < 0.01,

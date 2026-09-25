@@ -79,6 +79,12 @@
 
     <!-- Content -->
     <main class="p-4">
+      <% if (flash.error) { %>
+      <div class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i><%= flash.error %></div>
+      <% } %>
+      <% if (flash.success) { %>
+      <div class="alert alert-success alert-auto-dismiss"><i class="bi bi-check-circle me-2"></i><%= flash.success %></div>
+      <% } %>
       <%- body %>
     </main>
   </div>

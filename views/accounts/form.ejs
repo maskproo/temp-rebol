@@ -2,13 +2,13 @@
   <div class="col-md-6">
     <div class="card shadow-sm border-0">
       <div class="card-header bg-white border-0 pt-4">
-        <h5 class="fw-bold mb-0"><%= account ? 'تعديل الحساب' : 'إضافة حساب جديد' %></h5>
+        <h5 class="fw-bold mb-0"><%= account && account._id ? 'تعديل الحساب' : 'إضافة حساب جديد' %></h5>
       </div>
       <div class="card-body">
         <% if (error) { %>
         <div class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i><%= error %></div>
         <% } %>
-        <form method="POST" action="<%= account ? '/accounts/' + account._id + '?_method=PUT' : '/accounts' %>">
+        <form method="POST" action="<%= account && account._id ? '/accounts/' + account._id + '?_method=PUT' : '/accounts' %>">
           <div class="mb-3">
             <label class="form-label required">كود الحساب</label>
             <input type="text" name="code" class="form-control" value="<%= account?.code || '' %>" placeholder="مثال: 1100" required>

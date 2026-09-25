@@ -13,7 +13,7 @@
           <select name="customer" class="form-select" required>
             <option value="">-- اختر العميل --</option>
             <% customers.forEach(c => { %>
-            <option value="<%= c._id %>"><%= c.name %></option>
+            <option value="<%= c._id %>" <%= invoice && String(invoice.customer) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
             <% }) %>
           </select>
         </div>
@@ -82,7 +82,8 @@
       </div>
 
       <div class="d-flex gap-2 mt-3">
-        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg me-1"></i>إنشاء الفاتورة</button>
+        <button type="submit" name="action" value="issue" class="btn btn-primary btn-lg"><i class="bi bi-check-lg me-1"></i>إصدار الفاتورة</button>
+        <button type="submit" name="action" value="draft" class="btn btn-outline-primary btn-lg"><i class="bi bi-file-earmark me-1"></i>حفظ كمسودة</button>
         <a href="/invoices" class="btn btn-outline-secondary btn-lg">إلغاء</a>
       </div>
     </form>

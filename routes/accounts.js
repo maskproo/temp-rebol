@@ -2,25 +2,37 @@ const express = require('express');
 const router = express.Router();
 const Account = require('../models/Account');
 const JournalEntry = require('../models/JournalEntry');
+const Expense = require('../models/Expense');
+const { getBalances, balanceOf } = require('../services/ledger');
+const { withError } = require('../services/flash');
+
+// Unchecked checkboxes are not submitted at all
+const accountFields = (body) => ({
+  code: body.code,
+  name: body.name,
+  type: body.type,
+  description: body.description || '',
+  isActive: body.isActive === 'true'
+});
 
 // GET all accounts
 router.get('/', async (req, res) => {
   const { type } = req.query;
-  const filter = type ? { type } : {};
-  const accounts = await Account.find(filter).sort({ code: 1 });
+  const filter = typeof type === 'string' && type ? { type } : {};
+  const [accounts, balances] = await Promise.all([
+    Account.find(filter).sort({ code: 1 }),
+    getBalances()
+  ]);
 
-  // Compute balances
-  const accountsWithBalance = await Promise.all(
-    accounts.map(async (acc) => {
-      const balance = await acc.getBalance();
-      return { ...acc.toObject({ virtuals: true }), balance };
-    })
-  );
+  const accountsWithBalance = accounts.map(acc => ({
+    ...acc.toObject({ virtuals: true }),
+    balance: balanceOf(balances, acc).balance
+  }));
 
   res.render('accounts/index', {
     title: 'دليل الحسابات',
     accounts: accountsWithBalance,
-    selectedType: type || ''
+    selectedType: filter.type || ''
   });
 });
 
@@ -32,12 +44,12 @@ router.get('/new', (req, res) => {
 // POST create
 router.post('/', async (req, res) => {
   try {
-    await Account.create(req.body);
+    await Account.create(accountFields(req.body));
     res.redirect('/accounts');
   } catch (err) {
     res.render('accounts/form', {
       title: 'حساب جديد',
-      account: req.body,
+      account: accountFields(req.body),
       error: err.message
     });
   }
@@ -46,23 +58,34 @@ router.post('/', async (req, res) => {
 // GET edit
 router.get('/:id/edit', async (req, res) => {
   const account = await Account.findById(req.params.id);
+  if (!account) return res.redirect('/accounts');
   res.render('accounts/form', { title: 'تعديل الحساب', account, error: null });
 });
 
-// PUT update
+// PUT update (load + save so validators and normalBalance hook run)
 router.put('/:id', async (req, res) => {
+  const account = await Account.findById(req.params.id);
+  if (!account) return res.redirect('/accounts');
   try {
-    await Account.findByIdAndUpdate(req.params.id, req.body);
+    account.set(accountFields(req.body));
+    await account.save();
     res.redirect('/accounts');
   } catch (err) {
-    const account = await Account.findById(req.params.id);
     res.render('accounts/form', { title: 'تعديل الحساب', account, error: err.message });
   }
 });
 
-// DELETE
+// DELETE (only accounts that were never used)
 router.delete('/:id', async (req, res) => {
-  await Account.findByIdAndDelete(req.params.id);
+  const id = req.params.id;
+  const [inJournal, inExpenses] = await Promise.all([
+    JournalEntry.exists({ 'lines.account': id }),
+    Expense.exists({ account: id })
+  ]);
+  if (inJournal || inExpenses) {
+    return res.redirect(withError('/accounts', 'لا يمكن حذف حساب عليه حركات - يمكنك إيقافه بدلاً من ذلك'));
+  }
+  await Account.findByIdAndDelete(id);
   res.redirect('/accounts');
 });
 

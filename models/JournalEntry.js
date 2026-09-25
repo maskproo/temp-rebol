@@ -16,17 +16,25 @@ const JournalEntrySchema = new mongoose.Schema({
   sourceId: { type: mongoose.Schema.Types.ObjectId }
 }, { timestamps: true });
 
-// Validate: total debits == total credits
-JournalEntrySchema.pre('save', function (next) {
+JournalEntrySchema.index({ 'lines.account': 1 });
+JournalEntrySchema.index({ source: 1, sourceId: 1 });
+
+// Validate: at least two lines, each line one-sided, total debits == total credits
+JournalEntrySchema.pre('validate', function () {
+  if (this.lines.length < 2) {
+    throw new Error('القيد يجب أن يحتوي على سطرين على الأقل');
+  }
+  for (const l of this.lines) {
+    const d = l.debit || 0, c = l.credit || 0;
+    if ((d > 0 && c > 0) || (d === 0 && c === 0)) {
+      throw new Error('كل سطر يجب أن يكون مديناً أو دائناً فقط (وبمبلغ أكبر من صفر)');
+    }
+  }
   const totalDebit = this.lines.reduce((sum, l) => sum + (l.debit || 0), 0);
   const totalCredit = this.lines.reduce((sum, l) => sum + (l.credit || 0), 0);
   if (Math.abs(totalDebit - totalCredit) > 0.01) {
-    return next(new Error(`القيد غير متوازن: مجموع المدين ${totalDebit} ≠ مجموع الدائن ${totalCredit}`));
+    throw new Error(`القيد غير متوازن: مجموع المدين ${totalDebit} ≠ مجموع الدائن ${totalCredit}`);
   }
-  if (this.lines.length < 2) {
-    return next(new Error('القيد يجب أن يحتوي على سطرين على الأقل'));
-  }
-  next();
 });
 
 JournalEntrySchema.virtual('totalDebit').get(function () {

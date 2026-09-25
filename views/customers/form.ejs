@@ -8,7 +8,7 @@
         <% if (error) { %>
         <div class="alert alert-danger"><%= error %></div>
         <% } %>
-        <form method="POST" action="<%= customer ? '/customers/' + customer._id + '?_method=PUT' : '/customers' %>">
+        <form method="POST" action="<%= customer && customer._id ? '/customers/' + customer._id + '?_method=PUT' : '/customers' %>">
           <div class="mb-3">
             <label class="form-label required">اسم العميل</label>
             <input type="text" name="name" class="form-control" value="<%= customer?.name || '' %>" required>
